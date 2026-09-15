@@ -7,18 +7,24 @@
 <title>Register | Companion Connect</title>
 
 <style>
-body {
+* {
+  box-sizing: border-box;
   font-family: Arial, sans-serif;
+}
+
+body {
+  margin: 0;
   background: #f5f5f5;
   padding: 20px;
 }
 
 .container {
-  max-width: 450px;
-  margin: auto;
+  max-width: 480px;
+  margin: 20px auto;
   background: white;
   padding: 25px;
-  border-radius: 12px;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.08);
 }
 
 h1 {
@@ -26,23 +32,51 @@ h1 {
   color: #ff4f81;
 }
 
+.subtitle {
+  text-align: center;
+  color: #666;
+  margin-bottom: 25px;
+}
+
+label {
+  display: block;
+  margin-top: 12px;
+  font-weight: bold;
+}
+
 input, select, textarea {
   width: 100%;
   padding: 12px;
-  margin: 8px 0 15px;
+  margin-top: 6px;
   border: 1px solid #ddd;
-  border-radius: 6px;
-  box-sizing: border-box;
+  border-radius: 7px;
+  font-size: 15px;
+}
+
+textarea {
+  resize: vertical;
 }
 
 button {
   width: 100%;
+  margin-top: 20px;
   padding: 14px;
+  border: none;
+  border-radius: 8px;
   background: #ff4f81;
   color: white;
-  border: none;
-  border-radius: 6px;
   font-size: 16px;
+  font-weight: bold;
+}
+
+button:disabled {
+  background: #aaa;
+}
+
+#message {
+  text-align: center;
+  margin-top: 15px;
+  font-weight: bold;
 }
 </style>
 </head>
@@ -53,51 +87,125 @@ button {
 
 <h1>Register Your Profile</h1>
 
-<p>18+ adults only. Register for social companionship.</p>
+<p class="subtitle">
+18+ adults only. Create your companionship profile.
+</p>
 
-<form onsubmit="submitForm(event)">
+<form id="registrationForm">
 
 <label>Full Name</label>
-<input type="text" required>
+<input id="name" type="text" required>
 
 <label>Age</label>
-<input type="number" min="18" required>
+<input id="age" type="number" min="18" required>
 
 <label>Gender</label>
-<select required>
-<option value="">Select</option>
-<option>Male</option>
-<option>Female</option>
-<option>Other</option>
+<select id="gender" required>
+  <option value="">Select gender</option>
+  <option value="Male">Male</option>
+  <option value="Female">Female</option>
+  <option value="Other">Other</option>
 </select>
 
 <label>City</label>
-<input type="text" required>
+<input id="city" type="text" required>
 
 <label>About You</label>
-<textarea rows="4" placeholder="Tell us about yourself"></textarea>
+<textarea id="bio" rows="4"
+placeholder="Tell people about yourself"></textarea>
 
-<label>Contact Email</label>
-<input type="email" required>
+<label>Email</label>
+<input id="email" type="email" required>
 
 <label>
-<input type="checkbox" required>
-I confirm that I am 18 or older.
+<input type="checkbox" required style="width:auto;">
+ I confirm that I am 18 or older.
 </label>
 
-<button type="submit">Submit Registration</button>
+<button id="submitBtn" type="submit">
+Submit Registration
+</button>
 
 </form>
+
+<div id="message"></div>
 
 </div>
 
 <script>
-function submitForm(event) {
+
+
+const SUPABASE_KEY =
+sb_publishable_Lq5nj5Xa1iwx-sWDNykQNQ_HDWt_MeG
+const SUPABASE_KEY =
+"sb_publishable_Lq5nj5Xa1iwx-sWDNykQNQ_HDWt_MeG";
+const form = document.getElementById("registrationForm");
+const button = document.getElementById("submitBtn");
+const message = document.getElementById("message");
+
+form.addEventListener("submit", async function(event) {
+
   event.preventDefault();
 
-  alert("Registration received! Admin approval is required.");
-}
+  button.disabled = true;
+  button.innerText = "Submitting...";
+
+  const data = {
+    name: document.getElementById("name").value.trim(),
+    age: Number(document.getElementById("age").value),
+    gender: document.getElementById("gender").value,
+    city: document.getElementById("city").value.trim(),
+    bio: document.getElementById("bio").value.trim(),
+    email: document.getElementById("email").value.trim(),
+    status: "pending"
+  };
+
+  try {
+
+    const response = await fetch(
+      SUPABASE_URL + "/rest/v1/registrations",
+      {
+        method: "POST",
+
+        headers: {
+          "apikey": SUPABASE_KEY,
+          "Authorization": "Bearer " + SUPABASE_KEY,
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+
+        body: JSON.stringify(data)
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(error);
+    }
+
+    message.style.color = "green";
+    message.innerText =
+      "Registration submitted successfully! Your profile is pending approval.";
+
+    form.reset();
+
+  } catch (error) {
+
+    console.error(error);
+
+    message.style.color = "red";
+    message.innerText =
+      "Registration failed. Please try again.";
+
+  }
+
+  button.disabled = false;
+  button.innerText = "Submit Registration";
+
+});
+
 </script>
 
 </body>
 </html>
+  
